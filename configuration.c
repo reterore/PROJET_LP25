@@ -32,7 +32,7 @@ void init_configuration(configuration_t *the_config) {
  * @param the_config is a pointer to the configuration to update
  * @param argc is the number of arguments to be processed
  * @param argv is an array of strings with the program parameters
- * @return -1 if configuration cannot succeed, 0 when ok
+ * @return -1 if configuration cannot succeed, 0 when ok.
  */
 int set_configuration(configuration_t *the_config, int argc, char *argv[]) {
 }
