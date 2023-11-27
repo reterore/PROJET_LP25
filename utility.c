@@ -1,14 +1,35 @@
 #include "defines.h"
 #include <string.h>
 
-/*!
- * @brief concat_path concatenates suffix to prefix into result
- * It checks if prefix ends by / and adds this token if necessary
- * It also checks that result will fit into PATH_SIZE length
- * @param result the result of the concatenation
- * @param prefix the first part of the resulting path
- * @param suffix the second part of the resulting path
- * @return a pointer to the resulting path, NULL when concatenation failed
- */
 char *concat_path(char *result, char *prefix, char *suffix) {
+    // Check for NULL pointers
+    if (result == NULL || prefix == NULL || suffix == NULL) {
+        return NULL;
+    }
+
+    // Copy the prefix to the result
+    strcpy(result, prefix);
+
+    // Check if the prefix ends with '/'
+    size_t prefix_len = strlen(result);
+    if (prefix_len > 0 && result[prefix_len - 1] != '/') {
+        // Add a '/' to the end of the prefix
+        if (prefix_len + 1 < PATH_SIZE) {
+            result[prefix_len] = '/';
+            result[prefix_len + 1] = '\0';
+        } else {
+            // Not enough space in result
+            return NULL;
+        }
+    }
+
+    // Concatenate the suffix to the result
+    size_t suffix_len = strlen(suffix);
+    if (prefix_len + suffix_len < PATH_SIZE) {
+        strcat(result, suffix);
+        return result;
+    } else {
+        // Not enough space in result
+        return NULL;
+    }
 }

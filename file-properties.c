@@ -1,4 +1,4 @@
-#include <file-properties.h>
+#include "file-properties.h"
 
 #include <sys/stat.h>
 #include <dirent.h>
@@ -6,10 +6,10 @@
 #include <unistd.h>
 #include <assert.h>
 #include <string.h>
-#include <defines.h>
+#include "defines.h"
 #include <fcntl.h>
 #include <stdio.h>
-#include <utility.h>
+#include "utility.h"
 
 /*!
  * @brief get_file_stats gets all of the required information for a file (inc. directories)
