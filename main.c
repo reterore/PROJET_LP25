@@ -6,6 +6,7 @@
 #include "processes.h"
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 // Définir une structure pour les informations sur les fichiers, LISTE CHAINEE
 typedef struct FileNode {
@@ -14,21 +15,21 @@ typedef struct FileNode {
     struct FileNode* next;
 } FileNode;
 
-// Fonction d'analyse des options du programm
-void parseOptions(int argc, char *argv[], char *sourceFolder, char *destFolder, int *dateSizeOnly, int *numAnalyzers, int *noParallel, int *verbose, int *dryRun) {
+// Fonction d'analyse des options du programme
+void parseOptions(int argc, char *argv[], char *source_folder, char *dest_folder, int *date_size_only, int *numanalyzer, int *noparallel, int *verbose, int *dryrun) {
     int opt;
 
     // Set default values
-    *dateSizeOnly = 0;
-    *numAnalyzers = 1;
-    *noParallel = 0;
+    *date_size_only = 0;
+    *numanalyzer = 1;
+    *noparallel = 0;
     *verbose = 0;
-    *dryRun = 0;
+    *dryrun = 0;
 
     while ((opt = getopt(argc, argv, "n:v")) != -1) {
         switch (opt) {
             case 'n':
-                *numAnalyzers = atoi(optarg);
+                *numanalyzer = atoi(optarg);
                 break;
             case 'v':
                 *verbose = 1;
@@ -46,8 +47,8 @@ void parseOptions(int argc, char *argv[], char *sourceFolder, char *destFolder, 
         exit(EXIT_FAILURE);
     }
 
-    strcpy(sourceFolder, argv[optind]);
-    strcpy(destFolder, argv[optind + 1]);
+    strcpy(source_folder, argv[optind]);
+    strcpy(dest_folder, argv[optind + 1]);
 }
 
 // Fonction d'impression de la liste des fichiers :  parcourt la liste et imprime le chemin de chaque fichier.
@@ -86,16 +87,16 @@ int main(int argc, char *argv[]) {
 
 
 // Valeurs par défaut des options
-    char sourceFolder[256];
-    char destFolder[256];
-    int dateSizeOnly = 0;
-    int numAnalyzers = 1;
-    int noParallel = 0;
+    char source_folder[256];
+    char dest_folder[256];
+    int date_size_only = 0;
+    int numanalyzer = 1;
+    int noparallel = 0;
     int verbose = 0;
-    int dryRun = 0;
+    int dryrun = 0;
 
 // Analyse des options du programme
-    parseOptions(argc, argv, sourceFolder, destFolder, &dateSizeOnly, &numAnalyzers, &noParallel, &verbose, &dryRun);
+    parseOptions(argc, argv, source_folder, dest_folder, &date_size_only, &numanalyzer, &noparallel, &verbose, &dryrun);
 
 // Emplacement pour la liste chaînée des fichiers du dossier SOURCE
     FileNode *sourceList = NULL;
