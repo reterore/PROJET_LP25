@@ -41,11 +41,15 @@ void init_configuration(configuration_t *the_config) {
  * @return -1 if configuration cannot succeed, 0 when ok
  */
 int set_configuration(configuration_t *the_config, int argc, char *argv[]) {
+    if (the_config == NULL) {
+        return -1;
+    }
     int opt;
     while ((opt = getopt(argc, argv, "hn:")) != -1) {
         switch (opt) {
             case 'n':
                 the_config->processes_count = atoi(optarg);
+
                 if (the_config->processes_count <= 0) {
                     fprintf(stderr, "Error: Invalid number of processes.\n");
                     return -1;
