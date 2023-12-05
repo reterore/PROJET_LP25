@@ -73,7 +73,16 @@ int send_analyze_file_response(int msg_queue, int recipient, files_list_entry_t 
  * Calls send_file_entry function
  */
 int send_files_list_element(int msg_queue, int recipient, files_list_entry_t *file_entry) {
-    return send_file_entry(msg_queue, recipient, file_entry, COMMAND_CODE_FILE_ENTRY);
+    // Check for NULL file_entry
+    if (!file_entry) {
+        return -1;
+    }
+
+    // Calculate the size of the message
+    size_t msg_size = sizeof(files_list_entry_t);
+
+    // Call the function to send the file entry
+    return send_file_entry(msg_queue, recipient, (const void *)file_entry, msg_size);
 }
 
 /*!
