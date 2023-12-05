@@ -25,10 +25,12 @@ void display_help(char *my_name) {
  * @param the_config is a pointer to the configuration to be initialized
  */
 void init_configuration(configuration_t *the_config) {
+    if (the_config !=NULL){
     // Initialize the configuration with default values
     the_config->processes_count = 1; // Default to a single process
     the_config->is_parallel = true; // Default to parallel computing
     the_config->uses_md5 = false; // Default to calculating MD5 for files
+    }
 }
 
 /*!
