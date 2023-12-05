@@ -1,7 +1,7 @@
 #include "processes.h"
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/msg.h>
+#include "sys/msg.h"
 #include <stdio.h>
 #include "messages.h"
 #include "file-properties.h"
