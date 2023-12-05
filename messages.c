@@ -73,7 +73,7 @@ int send_analyze_file_response(int msg_queue, int recipient, files_list_entry_t 
  * Calls send_file_entry function
  */
 int send_files_list_element(int msg_queue, int recipient, files_list_entry_t *file_entry) {
-    // Check for NULL file_entry
+    // Check for NULL file_entry,
     if (!file_entry) {
         return -1;
     }
