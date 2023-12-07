@@ -1,4 +1,4 @@
-#include <sync.h>
+#include "sync.h"
 #include <dirent.h>
 #include <string.h>
 #include "processes.h"
@@ -21,12 +21,11 @@
  * @param p_context is a pointer to the processes context
  */
 void synchronize(configuration_t *the_config, process_context_t *p_context) {
-    // Check for NULL pointers
+      // Check for NULL pointers
     if (!the_config || !p_context) {
         fprintf(stderr, "Invalid configuration or process context pointers\n");
         return;
     }
-
 }
 
 /*!
@@ -82,9 +81,9 @@ void make_list(files_list_t *list, char *target) {
  * @return a pointer to a dir, NULL if it cannot be opened
  */
 DIR *open_dir(char *path) {
-    DIR *dir = opendir(path);
+      DIR *dir = opendir(path);
     if (dir == NULL) {
-        perror("Error opening directory");
+        perror("Error opening directory ");
     }
     return dir;
 }
