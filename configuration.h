@@ -12,6 +12,7 @@ typedef struct {
     bool date_size_only;
     bool verbose;
     bool dry_run;
+
 } configuration_t;
 
 void init_configuration(configuration_t *the_config);
