@@ -58,6 +58,9 @@ int set_configuration(configuration_t *the_config, int argc, char *argv[]) {
             case 'h':
                 display_help(argv[0]);
                 exit(EXIT_SUCCESS);
+            case 'v':
+                the_config->verbose = true;
+                break;
             default:
                 return -1;
         }
