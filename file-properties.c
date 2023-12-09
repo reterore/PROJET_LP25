@@ -99,8 +99,12 @@ int compute_file_md5(files_list_entry_t *entry) {
  * @return true if directory exists, false else
  */
 bool directory_exists(char *path_to_dir) {
-    struct stat dir_stat;
-    return stat(path_to_dir, &dir_stat) == 0 && S_ISDIR(dir_stat.st_mode);
+    DIR *dir = opendir(path_to_dir);
+    if (dir) {
+        closedir(dir);
+        return true;
+    }
+    return false;
 }
 
 /*!
@@ -110,12 +114,11 @@ bool directory_exists(char *path_to_dir) {
  * Hint: try to open a file in write mode in the target directory.
  */
 bool is_directory_writable(char *path_to_dir) {
-    // Try to open a file in write mode in the target directory
-    int fd = open(concat_path(path_to_dir, "tempfile", ""), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-    if (fd != -1) {
-        close(fd);
-        remove(concat_path(path_to_dir, "tempfile", ""));  // Remove the temporary file
-        return true; // Directory is writable
+    FILE *file = fopen(path_to_dir, "wb");
+    if (file) {
+        fclose(file);
+        remove(path_to_dir);
+        return true;
     }
-    return false; // Directory is not writable
+    return false;
 }
