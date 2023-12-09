@@ -63,6 +63,37 @@ int get_file_stats(files_list_entry_t *entry) {
 
 
 /*!
+ * @brief compute_file_md5 computes a file's MD5 sum
+ * @param the pointer to the files list entry
+ * @return -1 in case of error, 0 else
+ * Use libcrypto functions from openssl/evp.h
+ */
+int compute_file_md5(files_list_entry_t *entry) {
+    FILE *file = fopen(entry->path_and_name, "rb");
+    if (!file) {
+        perror("Error opening file for MD5 computation");
+        return -1;
+    }
+
+    MD5_CTX md5Context;
+    MD5_Init(&md5Context);
+
+    const size_t bufferSize = 4096;
+    unsigned char buffer[bufferSize];
+    size_t bytesRead;
+
+    while ((bytesRead = fread(buffer, 1, bufferSize, file)) != 0) {
+        MD5_Update(&md5Context, buffer, bytesRead);
+    }
+
+    MD5_Final(entry->md5sum, &md5Context);
+
+    fclose(file);
+
+    return 0;
+}
+
+/*!
  * @brief directory_exists tests the existence of a directory
  * @param path_to_dir a string with the path to the directory
  * @return true if directory exists, false else
