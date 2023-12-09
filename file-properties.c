@@ -40,7 +40,11 @@ int get_file_stats(files_list_entry_t *entry) {
 
     // Fill properties for both files and directories
     entry->mode = file_stat.st_mode;
-    entry->mtime = file_stat.st_mtim;
+
+    // Convert time_t to struct timespec
+    entry->mtime.tv_sec = file_stat.st_mtime;
+    entry->mtime.tv_nsec = 0;
+
     entry->entry_type = S_ISDIR(file_stat.st_mode) ? DOSSIER : FICHIER;
 
     if (entry->entry_type == FICHIER) {
@@ -57,66 +61,6 @@ int get_file_stats(files_list_entry_t *entry) {
     return 0; // Success
 }
 
-/*!
- * @brief compute_file_md5 computes a file's MD5 sum
- * @param entry the pointer to the files list entry
- * @return -1 in case of error, 0 else
- * Use libcrypto functions from openssl/evp.h
- */
-int compute_file_md5(files_list_entry_t *entry) {
-    // Check for NULL entry or if it's not a file
-    if (!entry || entry->entry_type != FICHIER) {
-        return -1;
-    }
-
-    FILE *file = fopen(entry->path_and_name, "rb");
-    if (!file) {
-        // Error opening the file
-        return -1;
-    }
-
-    EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
-    if (!mdctx) {
-        // Error creating MD context
-        fclose(file);
-        return -1;
-    }
-
-    unsigned char md_value[EVP_MAX_MD_SIZE];
-    unsigned int md_len;
-
-    EVP_DigestInit(mdctx, EVP_md5());
-
-    while (1) {
-        unsigned char data[1024];
-        size_t read_len = fread(data, 1, sizeof(data), file);
-
-        if (read_len > 0) {
-            EVP_DigestUpdate(mdctx, data, read_len);
-        }
-
-        if (read_len < sizeof(data)) {
-            break;
-        }
-    }
-
-    EVP_DigestFinal(mdctx, md_value, &md_len);
-    EVP_MD_CTX_free(mdctx);
-    fclose(file);
-
-    // Convert MD5 to string
-    char md5_str[(EVP_MAX_MD_SIZE * 2) + 1];
-    for (unsigned int i = 0; i < md_len; i++) {
-        sprintf(&md5_str[i * 2], "%02x", md_value[i]);
-    }
-    md5_str[md_len * 2] = '\0';
-
-    // Copy MD5 to the entry
-    strncpy((char *)entry->md5sum, md5_str, sizeof(entry->md5sum) - 1);
-    entry->md5sum[sizeof(entry->md5sum) - 1] = '\0';
-
-    return 0; // Success
-}
 
 /*!
  * @brief directory_exists tests the existence of a directory
