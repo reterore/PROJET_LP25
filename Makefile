@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-O2 -Wall
-LDFLAGS=-lcrypto
+LDFLAGS=-lcrypto -lssl
 INC=-I.
 
 all: lp25-backup

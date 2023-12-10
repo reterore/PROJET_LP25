@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <string.h>
-#include "defines.h"
+#include "defines.Sh"
 #include <fcntl.h>
 #include <stdio.h>
 #include "utility.h"
