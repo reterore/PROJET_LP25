@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef enum {DATE_SIZE_ONLY, NO_PARALLEL} long_opt_values;
+typedef enum {DATE_SIZE_ONLY, NO_PARALLEL, DRY_RUN} long_opt_values;
 
 /*!
  * @brief function display_help displays a brief manual for the program usage
@@ -61,6 +61,14 @@ int set_configuration(configuration_t *the_config, int argc, char *argv[]) {
             case 'v':
                 the_config->verbose = true;
                 break;
+            case DATE_SIZE_ONLY:
+                the_config->uses_md5 = false;
+                break;
+            case NO_PARALLEL:
+                the_config->is_parallel = false;
+                break;
+            case DRY_RUN:
+                the_config->uses_dry_run = true;
             default:
                 return -1;
         }
