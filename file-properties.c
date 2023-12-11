@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "utility.h"
 
+
 /*!
  * @brief Gets all of the required information for a file (including directories).
  *
