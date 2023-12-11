@@ -5,12 +5,12 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef enum {DATE_SIZE_ONLY, NO_PARALLEL, DRY_RUN} long_opt_values;
+typedef enum { DATE_SIZE_ONLY, NO_PARALLEL, DRY_RUN } long_opt_values;
 
 /*!
  * @brief function display_help displays a brief manual for the program usage
  * @param my_name is the name of the binary file
- * This function is provided with its code, you don't have to implement nor modify it.
+ * This function is provided with its code; you don't have to implement nor modify it.
  */
 void display_help(char *my_name) {
     printf("%s [options] source_dir destination_dir\n", my_name);
@@ -25,11 +25,12 @@ void display_help(char *my_name) {
  * @param the_config is a pointer to the configuration to be initialized
  */
 void init_configuration(configuration_t *the_config) {
-    if (the_config !=NULL){
-    // Initialize the configuration with default values
-    the_config->processes_count = 1; // Default to a single process
-    the_config->is_parallel = true; // Default to parallel computing
-    the_config->uses_md5 = false; // Default to calculating MD5 for files
+    if (the_config != NULL) {
+        // Initialize the configuration with default values
+        memset(the_config, 0, sizeof(configuration_t)); // Clear the entire structure
+        the_config->processes_count = 1; // Default to a single process
+        the_config->is_parallel = true; // Default to parallel computing
+        the_config->uses_md5 = false; // Default to calculating MD5 for files
     }
 }
 
@@ -44,12 +45,12 @@ int set_configuration(configuration_t *the_config, int argc, char *argv[]) {
     if (the_config == NULL) {
         return -1;
     }
+
     int opt;
-    while ((opt = getopt(argc, argv, "hn:")) != -1) {
+    while ((opt = getopt(argc, argv, "hn:v")) != -1) {
         switch (opt) {
             case 'n':
                 the_config->processes_count = atoi(optarg);
-
                 if (the_config->processes_count <= 0) {
                     fprintf(stderr, "Error: Invalid number of processes.\n");
                     return -1;
@@ -66,9 +67,11 @@ int set_configuration(configuration_t *the_config, int argc, char *argv[]) {
                 break;
             case NO_PARALLEL:
                 the_config->is_parallel = false;
+                the_config->processes_count = 1; // Reset process count if parallel is disabled
                 break;
             case DRY_RUN:
                 the_config->uses_dry_run = true;
+                break;
             default:
                 return -1;
         }
@@ -82,7 +85,7 @@ int set_configuration(configuration_t *the_config, int argc, char *argv[]) {
     };
 
     int long_index = 0;
-    while ((opt = getopt_long(argc, argv, "hn:", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "hn:v", long_options, &long_index)) != -1) {
         switch (opt) {
             case DATE_SIZE_ONLY:
                 the_config->uses_md5 = true;
