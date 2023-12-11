@@ -80,7 +80,7 @@ void synchronize(configuration_t *the_config, process_context_t *p_context) {
     make_files_list(&source_list, source_path);
     make_files_list(&dest_list, dest_path);
 
-    // Compare and synchronize lists A COMPLETER  !!!
+    // Compare and synchronize lists A COMPLETER  !!!!
 
 
     // Free allocated memory

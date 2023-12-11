@@ -18,4 +18,4 @@ struct dirent *get_next_entry(DIR *dir);
 void init_files_list(files_list_t *list);
 void free_files_list(files_list_t *list);
 void add_file(files_list_t *list, const char *path);
-int is_directory(const char *path) ;
+int is_directory(const char *path) ;;
