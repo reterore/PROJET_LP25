@@ -13,10 +13,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void init_files_list(files_list_t *list) {
-    list->files = NULL;
-    list->size = 0;
-}
 
 void free_files_list(files_list_t *list) {
     for (size_t i = 0; i < list->size; ++i) {
@@ -27,21 +23,6 @@ void free_files_list(files_list_t *list) {
     list->size = 0;
 }
 
-void add_file(files_list_t *list, const char *path) {
-    list->files = realloc(list->files, (list->size + 1) * sizeof(files_list_entry_t));
-    if (list->files == NULL) {
-        perror("Error reallocating memory");
-        exit(EXIT_FAILURE);
-    }
-
-    list->files[list->size].path = strdup(path);
-    if (list->files[list->size].path == NULL) {
-        perror("Error allocating memory");
-        exit(EXIT_FAILURE);
-    }
-
-    list->size++;
-}
 
 int is_directory(const char *path) {
     struct stat stat_buf;
@@ -123,7 +104,7 @@ void make_files_list(files_list_t *list, char *target_path) {
         // Skip "." and ".."
         if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
             // Add the file to the list
-            add_file(list, entry->d_name);
+            add_file_entry(list, entry->d_name);
         }
     }
 
