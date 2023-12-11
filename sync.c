@@ -10,8 +10,49 @@
 #include "sys/sendfile.h"
 #include <unistd.h>
 #include "sys/msg.h"
-
+#include <stdlib.h>
 #include <stdio.h>
+
+void init_files_list(files_list_t *list) {
+    list->files = NULL;
+    list->size = 0;
+}
+
+void free_files_list(files_list_t *list) {
+    for (size_t i = 0; i < list->size; ++i) {
+        free(list->files[i].path);
+
+    }
+    free(list->files);
+    list->size = 0;
+}
+
+void add_file(files_list_t *list, const char *path) {
+    list->files = realloc(list->files, (list->size + 1) * sizeof(files_list_entry_t));
+    if (list->files == NULL) {
+        perror("Error reallocating memory");
+        exit(EXIT_FAILURE);
+    }
+
+    list->files[list->size].path = strdup(path);
+    if (list->files[list->size].path == NULL) {
+        perror("Error allocating memory");
+        exit(EXIT_FAILURE);
+    }
+
+    list->size++;
+}
+
+int is_directory(const char *path) {
+    struct stat stat_buf;
+    if (stat(path, &stat_buf) == -1) {
+        perror("Error checking if entry is a directory");
+        exit(EXIT_FAILURE);
+    }
+
+    return S_ISDIR(stat_buf.st_mode);
+}
+
 
 /*!
  * @brief synchronize is the main function for synchronization
@@ -26,6 +67,25 @@ void synchronize(configuration_t *the_config, process_context_t *p_context) {
         fprintf(stderr, "Invalid configuration or process context pointers\n");
         return;
     }
+
+    // Extract source and destination paths from configuration
+    char *source_path = the_config->source;
+    char *dest_path = the_config->destination;
+
+    files_list_t source_list, dest_list;
+    init_files_list(&source_list);
+    init_files_list(&dest_list);
+
+    // Build lists
+    make_files_list(&source_list, source_path);
+    make_files_list(&dest_list, dest_path);
+
+    // Compare and synchronize lists A COMPLETER  !!!!
+
+
+    // Free allocated memory
+    free_files_list(&source_list);
+    free_files_list(&dest_list);
 }
 
 /*!
@@ -44,6 +104,31 @@ bool mismatch(files_list_entry_t *lhd, files_list_entry_t *rhd, bool has_md5) {
  * @param target_path is the path whose files to list
  */
 void make_files_list(files_list_t *list, char *target_path) {
+    // Open the directory
+    DIR* dir = opendir(target_path);
+
+    // Check if the directory was opened successfully
+    if (dir == NULL) {
+        perror("Error opening directory");
+        exit(EXIT_FAILURE);
+    }
+
+    // Initialize the list
+    list->head = NULL;
+    list->size = 0;
+
+    // Read the directory entries
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        // Skip "." and ".."
+        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+            // Add the file to the list
+            add_file(list, entry->d_name);
+        }
+    }
+
+    // Close the directory
+    closedir(dir);
 }
 
 /*!
@@ -73,7 +158,37 @@ void copy_entry_to_destination(files_list_entry_t *source_entry, configuration_t
  * @param target is the target dir whose content must be listed
  */
 void make_list(files_list_t *list, char *target) {
+    DIR *dir;
+    struct dirent *entry;
+
+    if ((dir = opendir(target)) == NULL) {
+        perror("Error opening directory");
+        exit(EXIT_FAILURE);
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        // Ignore current and parent directory entries
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        // Build the full path of the file or directory
+        char full_path[PATH_MAX];
+        snprintf(full_path, sizeof(full_path), "%s/%s", target, entry->d_name);
+
+        // Check if the entry is a directory
+        if (is_directory(full_path)) {
+            // Recursively list files in the directory
+            make_list(list, full_path);
+        } else {
+            // Add the file path to the list
+            add_file(list, full_path);
+        }
+    }
+
+    closedir(dir);
 }
+
 
 /*!
  * @brief open_dir opens a dir
@@ -96,3 +211,7 @@ DIR *open_dir(char *path) {
  */
 struct dirent *get_next_entry(DIR *dir) {
 }
+
+
+
+

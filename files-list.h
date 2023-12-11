@@ -6,6 +6,7 @@
 
 typedef enum { FICHIER, DOSSIER } file_type_t;
 
+
 typedef struct _files_list_entry {
     char path_and_name[4096];
     struct timespec mtime;
@@ -15,11 +16,15 @@ typedef struct _files_list_entry {
     mode_t mode;
     struct _files_list_entry *next;
     struct _files_list_entry *prev;
-} files_list_entry_t;
+    char *path;
+} files_list_entry_t;;
+
 
 typedef struct {
     struct _files_list_entry *head;
     struct _files_list_entry *tail;
+    files_list_entry_t *files;
+    size_t size;
 } files_list_t;
 
 void clear_files_list(files_list_t *list);
