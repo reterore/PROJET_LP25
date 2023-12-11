@@ -15,7 +15,4 @@ void make_list(files_list_t *list, char *target);
 DIR *open_dir(char *path);
 struct dirent *get_next_entry(DIR *dir);
 
-;
-void free_files_list(files_list_t *list);
 
-int is_directory(const char *path) ;;
