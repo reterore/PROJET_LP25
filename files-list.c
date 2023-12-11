@@ -2,7 +2,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -23,26 +22,25 @@ void clear_files_list(files_list_t *list) {
  *  @brief add_file_entry adds a new file to the files list.
  *  It adds the file in an ordered manner (strcmp) and fills its properties
  *  by calling stat on the file.
- *  Il the file already exists, it does nothing and returns 0
+ *  If the file already exists, it does nothing and returns NULL
  *  @param list the list to add the file entry into
  *  @param file_path the full path (from the root of the considered tree) of the file
- *  @return a pointer to the added element if success, NULL else (out of memory)
+ *  @return a pointer to the added element if success, NULL else (out of memory or duplicate entry)
  */
 files_list_entry_t *add_file_entry(files_list_t *list, char *file_path) {
     // Check if the file entry already exists
-    files_list_entry_t *existing_entry = find_entry_by_name(list, file_path, 0, 0);
-    if (existing_entry != NULL) {
+    if (find_entry_by_name(list, file_path, 0, 0) != NULL) {
         return NULL; // Entry already exists
     }
 
     // Create a new file entry
-    files_list_entry_t *new_entry = (files_list_entry_t *)malloc(sizeof(files_list_entry_t));
+    files_list_entry_t *new_entry = malloc(sizeof(files_list_entry_t));
     if (!new_entry) {
         return NULL; // Memory allocation failed
     }
 
     // Initialize the new entry's properties
-    strcpy(new_entry->path_and_name, file_path);
+    strncpy(new_entry->path_and_name, file_path, sizeof(new_entry->path_and_name));
 
     // Call stat on the file and fill other properties
     struct stat file_stat;
@@ -174,3 +172,4 @@ void display_files_list_reversed(files_list_t *list) {
         printf("%s\n", cursor->path_and_name);
     }
 }
+
