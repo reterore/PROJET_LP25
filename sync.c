@@ -13,10 +13,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void init_files_list(files_list_t *list) {
-    list->files = NULL;
-    list->size = 0;
-}
 
 void free_files_list(files_list_t *list) {
     for (size_t i = 0; i < list->size; ++i) {
@@ -27,21 +23,6 @@ void free_files_list(files_list_t *list) {
     list->size = 0;
 }
 
-void add_file(files_list_t *list, const char *path) {
-    list->files = realloc(list->files, (list->size + 1) * sizeof(files_list_entry_t));
-    if (list->files == NULL) {
-        perror("Error reallocating memory");
-        exit(EXIT_FAILURE);
-    }
-
-    list->files[list->size].path = strdup(path);
-    if (list->files[list->size].path == NULL) {
-        perror("Error allocating memory");
-        exit(EXIT_FAILURE);
-    }
-
-    list->size++;
-}
 
 int is_directory(const char *path) {
     struct stat stat_buf;
@@ -52,6 +33,8 @@ int is_directory(const char *path) {
 
     return S_ISDIR(stat_buf.st_mode);
 }
+
+
 
 
 /*!
@@ -96,6 +79,36 @@ void synchronize(configuration_t *the_config, process_context_t *p_context) {
  * @return true if both files are not equal, false else
  */
 bool mismatch(files_list_entry_t *lhd, files_list_entry_t *rhd, bool has_md5) {
+    // Compare modification times and sizes
+    if (lhd->mtime.tv_sec != rhd->mtime.tv_sec ||
+        lhd->mtime.tv_nsec != rhd->mtime.tv_nsec ||
+        lhd->size != rhd->size) {
+        return true; // Files are different
+    }
+
+    // Optionally check MD5 sum if enabled
+    if (has_md5) {
+        char lmd5[33], rmd5[33]; // MD5 sum is typically 32 characters plus the null terminator
+
+        // Calculate MD5 sum for the source file
+        if (compute_file_md5 (lhd)) {
+            // MD5 calculation failed for the source file
+            return true;
+        }
+
+        // Calculate MD5 sum for the destination file
+        if (compute_file_md5 (rhd)) {
+            // MD5 calculation failed for the destination file
+            return true;
+        }
+
+        // Compare MD5 sums
+        if (strcmp(lmd5, rmd5) != 0) {
+            return true; // MD5 sums are different
+        }
+    }
+
+    return false; // Files are equal
 }
 
 /*!
@@ -123,7 +136,7 @@ void make_files_list(files_list_t *list, char *target_path) {
         // Skip "." and ".."
         if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
             // Add the file to the list
-            add_file(list, entry->d_name);
+            add_file_entry(list, entry->d_name);
         }
     }
 
@@ -148,6 +161,12 @@ void make_files_lists_parallel(files_list_t *src_list, files_list_t *dst_list, c
  * Use sendfile to copy the file, mkdir to create the directory
  */
 void copy_entry_to_destination(files_list_entry_t *source_entry, configuration_t *the_config) {
+    if (source_entry == NULL || the_config == NULL) {
+        return;
+    }
+
+    // Construct the destination path
+    char dest_path[PATH_SIZE];
 }
 
 /*!
@@ -210,6 +229,18 @@ DIR *open_dir(char *path) {
  * Relevant entries are all regular files and dir, except . and ..
  */
 struct dirent *get_next_entry(DIR *dir) {
+    if (dir == NULL) {
+        return NULL;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+            return entry; // Return the entry if it's not '.' or '..'
+        }
+    }
+
+    return NULL;
 }
 
 
