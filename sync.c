@@ -14,25 +14,8 @@
 #include <stdio.h>
 
 
-void free_files_list(files_list_t *list) {
-    for (size_t i = 0; i < list->size; ++i) {
-        free(list->files[i].path);
-
-    }
-    free(list->files);
-    list->size = 0;
-}
 
 
-int is_directory(const char *path) {
-    struct stat stat_buf;
-    if (stat(path, &stat_buf) == -1) {
-        perror("Error checking if entry is a directory");
-        exit(EXIT_FAILURE);
-    }
-
-    return S_ISDIR(stat_buf.st_mode);
-}
 
 
 
@@ -67,8 +50,8 @@ void synchronize(configuration_t *the_config, process_context_t *p_context) {
 
 
     // Free allocated memory
-    free_files_list(&source_list);
-    free_files_list(&dest_list);
+    clear_files_list(&source_list);
+    clear_files_list(&dest_list);
 }
 
 /*!
