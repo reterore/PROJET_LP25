@@ -1,124 +1,127 @@
 #include "file-properties.h"
-
 #include <sys/stat.h>
 #include <dirent.h>
 #include <openssl/evp.h>
 #include <unistd.h>
 #include <assert.h>
-#include <string.h>
-#include "defines.Sh"
+#include "defines.h"
 #include <fcntl.h>
 #include <stdio.h>
 #include "utility.h"
 
 /*!
- * @brief get_file_stats gets all of the required information for a file (inc. directories)
- * @param entry the files list entry
- * You must get:
- * - for files:
- *   - mode (permissions)
- *   - mtime (in nanoseconds)
- *   - size
- *   - entry type (FICHIER)
- *   - MD5 sum
- * - for directories:
- *   - mode
- *   - entry type (DOSSIER)
- * @return -1 in case of error, 0 else
+ * @brief Gets all of the required information for a file (including directories).
+ *
+ * This function retrieves information such as mode (permissions), mtime (in nanoseconds),
+ * size, entry type (FICHIER), and MD5 sum.
+ *
+ * For directories, it obtains mode and entry type (DOSSIER).
+ *
+ * @param entry The files list entry.
+ * @return -1 in case of error, 0 otherwise.
  */
 int get_file_stats(files_list_entry_t *entry) {
-    // Check for NULL entry
-    if (!entry) {
-        return -1;
-    }
+    struct stat sb;
+    const char *path = entry->path_and_name;
 
-    struct stat file_stat;
-    if (stat(entry->path_and_name, &file_stat) != 0) {
-        // Error getting file stat
-        return -1;
-    }
+    assert(lstat(path, &sb) != -1 && "Error in lstat");
 
-    // Fill properties for both files and directories
-    entry->mode = file_stat.st_mode;
+    entry->mtime.tv_nsec = sb.st_mtim.tv_nsec;
+    entry->size = sb.st_size;
+    entry->mode = sb.st_mode;
 
-    // Convert time_t to struct timespec
-    entry->mtime.tv_sec = file_stat.st_mtime;
-    entry->mtime.tv_nsec = 0;
+    if (S_ISDIR(sb.st_mode)) {
+        entry->entry_type = DOSSIER;
+    } else if (S_ISREG(sb.st_mode)) {
+        entry->entry_type = FICHIER;
 
-    entry->entry_type = S_ISDIR(file_stat.st_mode) ? DOSSIER : FICHIER;
-
-    if (entry->entry_type == FICHIER) {
-        // Additional properties for files
-        entry->size = (uint64_t)file_stat.st_size;
-
-        // Call the function to compute MD5 sum
-        if (compute_file_md5(entry) != 0) {
-            // Error computing MD5
-            return -1;
+        // Utilisation de concat_path pour ajouter "example.txt" au chemin
+        char result[PATH_SIZE];
+        if (concat_path(result, entry->path_and_name, "example.txt") != NULL) {
+            // Maintenant, 'result' contient le chemin complet avec le nouveau nom de fichier
+            // Utilisez 'result' comme nécessaire.
+            printf("Full path with new filename: %s\n", result);
+        } else {
+            // Gestion des erreurs lors de l'utilisation de concat_path
+            fprintf(stderr, "Error in concat_path\n");
         }
-    }
 
-    return 0; // Success
+        assert(compute_file_md5(entry) == 0 && "Error computing MD5");
+    } else {
+        return -1; // Type de fichier inconnu
+    }
+    return 0;
 }
 
-
 /*!
- * @brief compute_file_md5 computes a file's MD5 sum
- * @param the pointer to the files list entry
- * @return -1 in case of error, 0 else
- * Use libcrypto functions from openssl/evp.h
+ * @brief Computes a file's MD5 sum using libcrypto functions from openssl/evp.h.
+ *
+ * @param entry The pointer to the files list entry.
+ * @return -1 in case of error, 0 otherwise.
  */
 int compute_file_md5(files_list_entry_t *entry) {
-    FILE *file = fopen(entry->path_and_name, "rb");
-    if (!file) {
-        perror("Error opening file for MD5 computation");
-        return -1;
+    // Open and check if the file has been opened correctly.
+    int file = open(entry->path_and_name, O_RDONLY);
+    assert(file != -1 && "Unable to open the file");
+
+    EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+    const EVP_MD *md = EVP_md5();
+
+    assert(mdctx && md && EVP_DigestInit_ex(mdctx, md, NULL) && "Error in MD5 sum initialization");
+
+    unsigned char buffer[1024];
+    ssize_t bytes;
+    while ((bytes = read(file, buffer, sizeof(buffer))) > 0) {
+        assert(EVP_DigestUpdate(mdctx, buffer, bytes) && "Error in MD5 sum update");
     }
 
-    MD5_CTX md5Context;
-    MD5_Init(&md5Context);
+    close(file);
 
-    const size_t bufferSize = 4096;
-    unsigned char buffer[bufferSize];
-    size_t bytesRead;
+    unsigned int md_len;
+    assert(EVP_DigestFinal_ex(mdctx, entry->md5sum, &md_len) && "Error in MD5 sum finalization");
 
-    while ((bytesRead = fread(buffer, 1, bufferSize, file)) != 0) {
-        MD5_Update(&md5Context, buffer, bytesRead);
-    }
-
-    MD5_Final(entry->md5sum, &md5Context);
-
-    fclose(file);
+    EVP_MD_CTX_free(mdctx);
 
     return 0;
 }
 
 /*!
- * @brief directory_exists tests the existence of a directory
- * @param path_to_dir a string with the path to the directory
- * @return true if directory exists, false else
+ * @brief Tests the existence of a directory.
+ *
+ * @param path_to_dir A string with the path to the directory.
+ * @return true if the directory exists, false otherwise.
  */
 bool directory_exists(char *path_to_dir) {
-    DIR *dir = opendir(path_to_dir);
-    if (dir) {
-        closedir(dir);
+    struct stat sb;
+    if (stat(path_to_dir, &sb) == 0 && S_ISDIR(sb.st_mode)) {
         return true;
+    } else {
+        return false;
     }
-    return false;
 }
 
 /*!
- * @brief is_directory_writable tests if a directory is writable
- * @param path_to_dir the path to the directory to test
- * @return true if dir is writable, false else
- * Hint: try to open a file in write mode in the target directory.
+ * @brief Tests if a directory is writable.
+ *
+ * @param path_to_dir The path to the directory to test.
+ * @return true if the directory is writable, false otherwise.
+ * @note Try to open a file in write mode in the target directory.
  */
 bool is_directory_writable(char *path_to_dir) {
-    FILE *file = fopen(path_to_dir, "wb");
-    if (file) {
-        fclose(file);
-        remove(path_to_dir);
-        return true;
+    // Check if the directory is readable
+    DIR *dir = opendir(path_to_dir);
+    if (!dir) {
+        perror("Unable to open the directory");
+        return false;
     }
-    return false;
+
+    closedir(dir);
+
+    // Try to write to the directory using access
+    if (access(path_to_dir, W_OK) == 0) {
+        return true;
+    } else {
+        return false;
+    }
+
 }
