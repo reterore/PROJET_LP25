@@ -14,7 +14,7 @@ char *concat_path(char *result, char *prefix, char *suffix) {
     size_t prefix_len = strlen(result);
     if (prefix_len > 0 && result[prefix_len - 1] != '/') {
         // Add a '/' to the end of the prefix
-        if (prefix_len + 1 < PATH_SIZE) {
+        if (prefix_len + 2 <= PATH_SIZE) {
             result[prefix_len] = '/';
             result[prefix_len + 1] = '\0';
         } else {
@@ -25,7 +25,7 @@ char *concat_path(char *result, char *prefix, char *suffix) {
 
     // Concatenate the suffix to the result
     size_t suffix_len = strlen(suffix);
-    if (prefix_len + suffix_len < PATH_SIZE) {
+    if (prefix_len + suffix_len + 2 <= PATH_SIZE) {
         strcat(result, suffix);
         return result;
     } else {
