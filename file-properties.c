@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include "utility.h"
 
-
 /*!
  * @brief Gets all of the required information for a file (including directories).
  *
@@ -27,6 +26,7 @@ int get_file_stats(files_list_entry_t *entry) {
 
     assert(lstat(path, &sb) != -1 && "Error in lstat");
 
+    entry->mtime.tv_sec = sb.st_mtim.tv_sec;  // Copy seconds
     entry->mtime.tv_nsec = sb.st_mtim.tv_nsec;
     entry->size = sb.st_size;
     entry->mode = sb.st_mode;
@@ -124,5 +124,4 @@ bool is_directory_writable(char *path_to_dir) {
     } else {
         return false;
     }
-
 }
