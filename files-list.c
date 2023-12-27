@@ -20,8 +20,7 @@ void clear_files_list(files_list_t *list) {
 
 /*!
  *  @brief add_file_entry adds a new file to the files list.
- *  It adds the file in an ordered manner (strcmp) and fills its properties
- *  by calling stat on the file.
+ *  It adds the file in an ordered manner (strcmp) without filling its properties.
  *  If the file already exists, it does nothing and returns NULL
  *  @param list the list to add the file entry into
  *  @param file_path the full path (from the root of the considered tree) of the file
@@ -41,19 +40,8 @@ files_list_entry_t *add_file_entry(files_list_t *list, char *file_path) {
 
     // Initialize the new entry's properties
     strncpy(new_entry->path_and_name, file_path, sizeof(new_entry->path_and_name));
-
-    // Call stat on the file and fill other properties
-    struct stat file_stat;
-    if (stat(file_path, &file_stat) != 0) {
-        // Failed to get file information
-        free(new_entry);
-        return NULL;
-    }
-
-    new_entry->mtime = file_stat.st_mtim;
-    new_entry->size = file_stat.st_size;
-    new_entry->entry_type = S_ISDIR(file_stat.st_mode) ? DOSSIER : FICHIER;
-    new_entry->mode = file_stat.st_mode;
+    new_entry->next = NULL;
+    new_entry->prev = NULL;
 
     // Add the new entry to the list in an ordered manner
     files_list_entry_t *current = list->head;
@@ -66,7 +54,9 @@ files_list_entry_t *add_file_entry(files_list_t *list, char *file_path) {
     if (prev == NULL) {
         // Insert at the beginning of the list
         new_entry->next = list->head;
-        new_entry->prev = NULL;
+        if (list->head != NULL) {
+            list->head->prev = new_entry;
+        }
         list->head = new_entry;
     } else {
         // Insert in the middle or at the end of the list
@@ -135,6 +125,9 @@ files_list_entry_t *find_entry_by_name(files_list_t *list, char *file_path, size
         // You may want to use start_of_src and start_of_dest
         if (strcmp(current->path_and_name, file_path) == 0) {
             return current; // Entry found
+        } else if (strcmp(current->path_and_name, file_path) > 0) {
+            // Entry not found because we passed the point where it could be
+            break;
         }
 
         current = current->next;
@@ -172,4 +165,3 @@ void display_files_list_reversed(files_list_t *list) {
         printf("%s\n", cursor->path_and_name);
     }
 }
-
