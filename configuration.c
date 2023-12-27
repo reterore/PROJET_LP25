@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef enum { DATE_SIZE_ONLY, NO_PARALLEL, DRY_RUN } long_opt_values;
+typedef enum { DATE_SIZE_ONLY, NO_PARALLEL, DRY_RUN, VERBOSE } long_opt_values;
 
 /*!
  * @brief function display_help displays a brief manual for the program usage
@@ -18,6 +18,8 @@ void display_help(char *my_name) {
     printf("         \t-h display help (this text)\n");
     printf("         \t--date_size_only disables MD5 calculation for files\n");
     printf("         \t--no-parallel disables parallel computing (cancels values of option -n)\n");
+    printf("         \t--dry-run perform a trial run with no changes made\n");
+    printf("         \t-v enable verbose mode\n");
 }
 
 /*!
@@ -30,7 +32,9 @@ void init_configuration(configuration_t *the_config) {
         memset(the_config, 0, sizeof(configuration_t)); // Clear the entire structure
         the_config->processes_count = 1; // Default to a single process
         the_config->is_parallel = true; // Default to parallel computing
-        the_config->uses_md5 = false; // Default to calculating MD5 for files
+        the_config->uses_md5 = true; // Default to calculating MD5 for files
+        the_config->uses_dry_run = false; // Default to not performing a dry run
+        the_config->verbose = false; // Default to non-verbose mode
     }
 }
 
@@ -47,7 +51,16 @@ int set_configuration(configuration_t *the_config, int argc, char *argv[]) {
     }
 
     int opt;
-    while ((opt = getopt(argc, argv, "hn:v")) != -1) {
+    int long_index = 0;
+    static struct option long_options[] = {
+            {"date_size_only", no_argument, NULL, DATE_SIZE_ONLY},
+            {"no-parallel", no_argument, NULL, NO_PARALLEL},
+            {"dry-run", no_argument, NULL, DRY_RUN},
+            {"verbose", no_argument, NULL, VERBOSE},
+            {NULL, 0, NULL, 0}
+    };
+
+    while ((opt = getopt_long(argc, argv, "hn:v", long_options, &long_index)) != -1) {
         switch (opt) {
             case 'n':
                 the_config->processes_count = atoi(optarg);
@@ -72,27 +85,8 @@ int set_configuration(configuration_t *the_config, int argc, char *argv[]) {
             case DRY_RUN:
                 the_config->uses_dry_run = true;
                 break;
-            default:
-                return -1;
-        }
-    }
-
-    // Handle long options
-    static struct option long_options[] = {
-            {"date_size_only", no_argument, NULL, DATE_SIZE_ONLY},
-            {"no-parallel", no_argument, NULL, NO_PARALLEL},
-            {NULL, 0, NULL, 0}
-    };
-
-    int long_index = 0;
-    while ((opt = getopt_long(argc, argv, "hn:v", long_options, &long_index)) != -1) {
-        switch (opt) {
-            case DATE_SIZE_ONLY:
-                the_config->uses_md5 = true;
-                break;
-            case NO_PARALLEL:
-                the_config->is_parallel = false;
-                the_config->processes_count = 1; // Reset process count if parallel is disabled
+            case VERBOSE:
+                the_config->verbose = true;
                 break;
             default:
                 return -1;
