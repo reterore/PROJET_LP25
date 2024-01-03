@@ -7,17 +7,11 @@
 #include "file-properties.h"
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "sys/sendfile.h"
+#include <sys/sendfile.h>
 #include <unistd.h>
-#include "sys/msg.h"
+#include <sys/msg.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-
-
-
-
-
 
 
 /*!
@@ -28,7 +22,7 @@
  * @param p_context is a pointer to the processes context
  */
 void synchronize(configuration_t *the_config, process_context_t *p_context) {
-      // Check for NULL pointers
+    // Check for NULL pointers
     if (!the_config || !p_context) {
         fprintf(stderr, "Invalid configuration or process context pointers\n");
         return;
@@ -46,8 +40,7 @@ void synchronize(configuration_t *the_config, process_context_t *p_context) {
     make_files_list(&source_list, source_path);
     make_files_list(&dest_list, dest_path);
 
-    // Compare and synchronize lists A COMPLETER  !!!!
-
+    // Compare and synchronize lists (to be completed)
 
     // Free allocated memory
     clear_files_list(&source_list);
@@ -55,53 +48,68 @@ void synchronize(configuration_t *the_config, process_context_t *p_context) {
 }
 
 /*!
- * @brief mismatch tests if two files with the same name (one in source, one in destination) are equal
- * @param lhd a files list entry from the source
- * @param rhd a files list entry from the destination
- * @has_md5 a value to enable or disable MD5 sum check
- * @return true if both files are not equal, false else
+ * @brief copy_entry_to_destination copies a file from the source to the destination
+ * It keeps access modes and mtime (@see utimensat)
+ * Pay attention to the path so that the prefixes are not repeated from the source to the destination
+ * Use sendfile to copy the file, mkdir to create the directory
  */
-bool mismatch(files_list_entry_t *lhd, files_list_entry_t *rhd, bool has_md5) {
-    // Compare modification times and sizes
-    if (lhd->mtime.tv_sec != rhd->mtime.tv_sec ||
-        lhd->mtime.tv_nsec != rhd->mtime.tv_nsec ||
-        lhd->size != rhd->size) {
-        return true; // Files are different
+void copy_entry_to_destination(files_list_entry_t *source_entry, configuration_t *the_config) {
+    if (source_entry == NULL || the_config == NULL) {
+        return;
     }
 
-    // Optionally check MD5 sum if enabled
-    if (has_md5) {
-        char lmd5[33], rmd5[33]; // MD5 sum is typically 32 characters plus the null terminator
+    // Construct the destination path
+    char dest_path[PATH_SIZE];
+    concat_path(dest_path, the_config->destination, source_entry->path_and_name);
 
-        // Calculate MD5 sum for the source file
-        if (compute_file_md5 (lhd)) {
-            // MD5 calculation failed for the source file
-            return true;
-        }
+    // Implementation for constructing the destination path
 
-        // Calculate MD5 sum for the destination file
-        if (compute_file_md5 (rhd)) {
-            // MD5 calculation failed for the destination file
-            return true;
-        }
-
-        // Compare MD5 sums
-        if (strcmp(lmd5, rmd5) != 0) {
-            return true; // MD5 sums are different
-        }
+    // Open the source file
+    int source_fd = open(source_entry->path_and_name, O_RDONLY);
+    if (source_fd == -1) {
+        perror("Error opening source file");
+        return;
     }
 
-    return false; // Files are equal
+    // Create the destination directory if it doesn't exist
+    char dest_dir[PATH_SIZE];
+    strcpy(dest_dir, dest_path);
+    dirname(dest_dir);  // Extract the directory from the path
+    mkdir_p(dest_dir);  // Create the directory recursively if needed
+
+    // Open (or create) the destination file
+    int dest_fd = open(dest_path, O_WRONLY | O_CREAT | O_TRUNC, source_entry->mode);
+    if (dest_fd == -1) {
+        perror("Error opening destination file");
+        close(source_fd);
+        return;
+    }
+
+    // Use sendfile to copy the file
+    off_t offset = 0;
+    ssize_t bytes_sent = sendfile(dest_fd, source_fd, &offset, source_entry->size);
+
+    if (bytes_sent == -1) {
+        perror("Error sending file");
+    }
+
+    // Set the destination file's modification time
+    struct timespec times[2] = {source_entry->mtime, source_entry->mtime};
+    utimensat(AT_FDCWD, dest_path, times, 0);
+
+    // Close file descriptors
+    close(source_fd);
+    close(dest_fd);
 }
 
 /*!
- * @brief make_files_list buils a files list in no parallel mode
+ * @brief make_files_list builds a files list in no parallel mode
  * @param list is a pointer to the list that will be built
  * @param target_path is the path whose files to list
  */
 void make_files_list(files_list_t *list, char *target_path) {
     // Open the directory
-    DIR* dir = opendir(target_path);
+    DIR *dir = opendir(target_path);
 
     // Check if the directory was opened successfully
     if (dir == NULL) {
@@ -111,10 +119,10 @@ void make_files_list(files_list_t *list, char *target_path) {
 
     // Initialize the list
     list->head = NULL;
-    list->size = 0;
+    list->tail = NULL;
 
     // Read the directory entries
-    struct dirent* entry;
+    struct dirent *entry;
     while ((entry = readdir(dir)) != NULL) {
         // Skip "." and ".."
         if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
@@ -135,21 +143,7 @@ void make_files_list(files_list_t *list, char *target_path) {
  * @param msg_queue is the id of the MQ used for communication
  */
 void make_files_lists_parallel(files_list_t *src_list, files_list_t *dst_list, configuration_t *the_config, int msg_queue) {
-}
-
-/*!
- * @brief copy_entry_to_destination copies a file from the source to the destination
- * It keeps access modes and mtime (@see utimensat)
- * Pay attention to the path so that the prefixes are not repeated from the source to the destination
- * Use sendfile to copy the file, mkdir to create the directory
- */
-void copy_entry_to_destination(files_list_entry_t *source_entry, configuration_t *the_config) {
-    if (source_entry == NULL || the_config == NULL) {
-        return;
-    }
-
-    // Construct the destination path
-    char dest_path[PATH_SIZE];
+    // Implement parallel file list creation if needed
 }
 
 /*!
@@ -176,21 +170,20 @@ void make_list(files_list_t *list, char *target) {
 
         // Build the full path of the file or directory
         char full_path[PATH_MAX];
-        snprintf(full_path, sizeof(full_path), "%s/%s", target, entry->d_name);
+        concat_path(full_path, target, entry->d_name);
 
         // Check if the entry is a directory
-        if (is_directory(full_path)) {
+        if (directory_exists(full_path)) {
             // Recursively list files in the directory
             make_list(list, full_path);
         } else {
             // Add the file path to the list
-            add_file(list, full_path);
+            add_file_entry(list, entry->d_name);
         }
     }
 
     closedir(dir);
 }
-
 
 /*!
  * @brief open_dir opens a dir
@@ -198,9 +191,9 @@ void make_list(files_list_t *list, char *target) {
  * @return a pointer to a dir, NULL if it cannot be opened
  */
 DIR *open_dir(char *path) {
-      DIR *dir = opendir(path);
+    DIR *dir = opendir(path);
     if (dir == NULL) {
-        perror("Error opening directory ");
+        perror("Error opening directory");
     }
     return dir;
 }
@@ -219,13 +212,10 @@ struct dirent *get_next_entry(DIR *dir) {
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL) {
         if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-            return entry; // Return the entry if it's not '.' or '..'
+            return entry;
         }
     }
 
+    closedir(dir);
     return NULL;
 }
-
-
-
-
