@@ -33,14 +33,14 @@ void synchronize(configuration_t *the_config, process_context_t *p_context) {
     char *dest_path = the_config->destination;
 
     files_list_t source_list, dest_list;
-    init_files_list(&source_list);
-    init_files_list(&dest_list);
+    source_list.head = source_list.tail = NULL;
+    dest_list.head = dest_list.tail = NULL;
 
     // Build lists
     make_files_list(&source_list, source_path);
     make_files_list(&dest_list, dest_path);
 
-    // Compare and synchronize lists (to be completed)
+    // Compare and synchronize lists A COMPLETER  !!!!
 
     // Free allocated memory
     clear_files_list(&source_list);
