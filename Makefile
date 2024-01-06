@@ -1,18 +1,34 @@
-CC=gcc
-CFLAGS=-O2 -Wall
-LDFLAGS=-lcrypto -lssl
-INC=-I.
+CC = gcc
+CFLAGS = -Wall
 
-all: lp25-backup
+OBJS = configuration.o file-properties.o files-list.o main.o messages.o processes.o sync.o utility.o
 
-%.o: %.c %.h
-	$(CC) $(CFLAGS) $(INC) -c $< -o $@
+PROJET_LP25: $(OBJS)
+	$(CC) $(CFLAGS) -o PROJET_LP25 $(OBJS)
 
-file-properties.o: file-properties.c file-properties.h
-	$(CC) $(CFLAGS) -std=c11 $(INC) -c $< -o $@
+configuration.o: configuration.c configuration.h defines.h
+	$(CC) $(CFLAGS) -c configuration.c
 
-lp25-backup: main.c files-list.o sync.o configuration.o file-properties.o processes.o messages.o utility.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(INC) -o $@ $^
+file-properties.o: file-properties.c file-properties.h defines.h
+	$(CC) $(CFLAGS) -c file-properties.c
+
+files-list.o: files-list.c files-list.h defines.h
+	$(CC) $(CFLAGS) -c files-list.c
+
+main.o: main.c defines.h
+	$(CC) $(CFLAGS) -c main.c
+
+messages.o: messages.c messages.h defines.h
+	$(CC) $(CFLAGS) -c messages.c
+
+processes.o: processes.c processes.h defines.h
+	$(CC) $(CFLAGS) -c processes.c
+
+sync.o: sync.c sync.h defines.h
+	$(CC) $(CFLAGS) -c sync.c
+
+utility.o: utility.c utility.h defines.h
+	$(CC) $(CFLAGS) -c utility.c
 
 clean:
-	rm -f *.o lp25-backup
+	rm -f PROJET_LP25 *.o
