@@ -13,6 +13,24 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/*!
+ * @brief make_files_list buils a files list in no parallel mode
+ * @param list is a pointer to the list that will be built
+ * @param target_path is the path whose files to list
+ */
+void make_files_list(files_list_t *list, char *target_path) {
+    if (list == NULL || target_path == NULL) {
+        return;
+    }
+
+    make_list(list, target_path);
+
+    files_list_entry_t *p_entry = list->head;
+    while (p_entry != NULL) {
+        get_file_stats(p_entry);
+        p_entry = p_entry->next;
+    }
+}
 
 /*!
  * @brief synchronize is the main function for synchronization
@@ -54,85 +72,57 @@ void synchronize(configuration_t *the_config, process_context_t *p_context) {
  * Use sendfile to copy the file, mkdir to create the directory
  */
 void copy_entry_to_destination(files_list_entry_t *source_entry, configuration_t *the_config) {
-    if (source_entry == NULL || the_config == NULL) {
+    char dest_entry_path[PATH_SIZE]  = "";
+    concat_path(dest_entry_path, the_config->destination, source_entry->path_and_name + strlen(the_config->source));
+
+    if (the_config->dry_run == true) {
+        printf("%s copied to %s.\n", source_entry->path_and_name, dest_entry_path);
         return;
     }
 
-    // Construct the destination path
-    char dest_path[PATH_SIZE];
-    concat_path(dest_path, the_config->destination, source_entry->path_and_name);
-
-    // Implementation for constructing the destination path
-
-    // Open the source file
-    int source_fd = open(source_entry->path_and_name, O_RDONLY);
-    if (source_fd == -1) {
-        perror("Error opening source file");
+    // open the source file for reading
+    int source_file = open(source_entry->path_and_name, O_RDONLY);
+    if (source_file == -1) {
+        fprintf(stderr, "Error opening source file");
         return;
     }
 
-    // Create the destination directory if it doesn't exist
-    char dest_dir[PATH_SIZE];
-    strcpy(dest_dir, dest_path);
-    dirname(dest_dir);  // Extract the directory from the path
-    mkdir_p(dest_dir);  // Create the directory recursively if needed
-
-    // Open (or create) the destination file
-    int dest_fd = open(dest_path, O_WRONLY | O_CREAT | O_TRUNC, source_entry->mode);
-    if (dest_fd == -1) {
-        perror("Error opening destination file");
-        close(source_fd);
+    // open the destination file
+    int destination_file = open(dest_entry_path, O_WRONLY | O_CREAT | O_TRUNC, source_entry->mode);
+    // O_WRONLY: fichier doit être ouvert en mode écriture seulement
+    // O_CREAT: crée le fichier s'il n'existe pas
+    // O_TRUNC: tronque le fichier à zéro s'il existe
+    if (destination_file == -1) {
+        fprintf(stderr, "Error opening destination file");
+        close(source_file);
         return;
     }
 
-    // Use sendfile to copy the file
+    // copie des infos du fichier
     off_t offset = 0;
-    ssize_t bytes_sent = sendfile(dest_fd, source_fd, &offset, source_entry->size);
+    ssize_t bytes_copied = sendfile(destination_file, source_file, &offset, source_entry->size);
 
-    if (bytes_sent == -1) {
-        perror("Error sending file");
-    }
-
-    // Set the destination file's modification time
-    struct timespec times[2] = {source_entry->mtime, source_entry->mtime};
-    utimensat(AT_FDCWD, dest_path, times, 0);
-
-    // Close file descriptors
-    close(source_fd);
-    close(dest_fd);
-}
-
-/*!
- * @brief make_files_list builds a files list in no parallel mode
- * @param list is a pointer to the list that will be built
- * @param target_path is the path whose files to list
- */
-void make_files_list(files_list_t *list, char *target_path) {
-    // Open the directory
-    DIR *dir = opendir(target_path);
-
-    // Check if the directory was opened successfully
-    if (dir == NULL) {
-        perror("Error opening directory");
-        exit(EXIT_FAILURE);
-    }
-
-    // Initialize the list
-    list->head = NULL;
-    list->tail = NULL;
-
-    // Read the directory entries
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL) {
-        // Skip "." and ".."
-        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-            // Add the file to the list
-            add_file_entry(list, entry->d_name);
+    if (bytes_copied == -1) {
+        fprintf(stderr, "Error copying file");
+    } else {
+        if (the_config->verbose == true) {
+            printf("%s copied to %s.\n", source_entry->path_and_name, dest_entry_path);
         }
+        struct timespec new_time[2];
+        new_time[0].tv_nsec = UTIME_NOW;
+        new_time[0].tv_sec = UTIME_NOW;
+        new_time[1].tv_nsec = source_entry->mtime.tv_nsec;
+        new_time[1].tv_sec = source_entry->mtime.tv_sec;
+        if (utimensat(AT_FDCWD, dest_entry_path, new_time, 0) != 0) {
+            fprintf(stderr, "Erreur lors de la modification de l'heure de modification");
+        }
+
+        chmod(dest_entry_path, source_entry->mode);
     }
 
-    // Close the directory
-    closedir(dir);
+    close(source_file);
+    close(destination_file);
+
 }
 
 /*!

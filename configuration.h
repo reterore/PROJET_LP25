@@ -11,7 +11,7 @@ typedef struct {
     bool uses_md5;
     bool date_size_only;
     bool verbose;
-    bool uses_dry_run;
+    bool dry_run;
 
 } configuration_t;
 

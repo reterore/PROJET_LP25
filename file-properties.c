@@ -8,6 +8,8 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include "utility.h"
+#include <errno.h>
+#include <string.h>
 
 /*!
  * @brief Gets all of the required information for a file (including directories).
@@ -24,7 +26,11 @@ int get_file_stats(files_list_entry_t *entry) {
     struct stat sb;
     const char *path = entry->path_and_name;
 
-    assert(lstat(path, &sb) != -1 && "Error in lstat");
+    int result = lstat(path, &sb);
+    if (result == -1) {
+        printf("%s\n", strerror(errno));
+        // Handle the error...
+    }
 
     entry->mtime.tv_sec = sb.st_mtim.tv_sec;  // Copy seconds
     entry->mtime.tv_nsec = sb.st_mtim.tv_nsec;

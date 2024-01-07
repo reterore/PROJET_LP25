@@ -8,6 +8,8 @@
 #include "sync.h"
 #include <string.h>
 #include <errno.h>
+#include <sys/wait.h>
+#include <signal.h>
 
 /*!
  * @brief prepare prepares (only when parallel is enabled) the processes used for the synchronization.
