@@ -1,0 +1,113 @@
+Note : les entrées en gris sont à remplacer par votre propre texte
+
+Rapport de projet de LP25
+
+LAGARDE Emile, SANSON Malo, VIGNY Lucas, TC03
+
+Automne 2023
+
+Contexte du projet
+
+Le projet de LP25 est un projet en C ayant pour but d’appliquer les notions de C système vues en cours, TD et TP sur un cas d’usage concret. Pour l’édition de cette année du projet, l’objectif est de fournir une implémentation simplifiée de l’utilisateur rsync utilisé pour faire des sauvegardes de fichiers. L’implémentation proposera un fonctionnement séquentiel et un fonctionnement parallèle.
+
+lp25-backup a donc  pour mission d'aider à la sauvegarde d’un dossier source dans un dossier cible, c'est-à-dire à copier le contenu et les informations d’un dossier dans un autre. Cela peut servir à éviter de perdre des données en les ayant à plusieurs endroits différents. Cet exécutable pourrait par exemple être lancé à des intervalles prédéfinis pour garantir une sauvegarde systématique de fichiers importants.  
+État des lieux des compétences du groupe
+
+Avant LP25, notre groupe a suivi l’UV IF2 en TC01. Nous avons alors abordé les notions de base du langage C et de la programmation. Nous y avons vu les listes, les tableaux, les pointeurs, les structures, etc. Cependant des notions comme les listes chaînées n’ont pas été abordées dans cette UV. Tous les membres de ce groupes suivent l’UV LO21 qui nous a permis pendant le projet de comprendre des notions comme les liste chaînées par exemple.
+
+L’UV LP25 nous a permis de continuer notre apprentissage du langage C, mais plus particulièrement avec les notions de systèmes de fichiers, de processus et de communications entre processus, que nous n'avions pas abordés jusqu’alors.
+Suivre les TD/TP nous a permis de combler quelques lacunes notamment sur les fichiers et d’apprendre de nouvelles notions comme la communication entre processus.
+
+
+
+
+
+Répartition des tâches : planification
+
+Nous avons tout d’abord commencé par lire attentivement le sujet, ce dernier étant long et complexe il nous a fallu un certain temps pour comprendre tout ce qui était demandé. Nous avons ensuite décidé de se répartir les tâches en se donnant des fonctions ou des groupes de fonctions à compléter. Nous avons essayé de répartir ces tâches en fonction des dépendances des fichiers afin de pouvoir avancer au maximum sans être ralenti par les avancées des autres.
+
+Ici, décrire les tâches telles que vous les avez identifiées, et à qui elles ont été affectées. Donner les estimations de durée de chaque tâche.
+
+Répartition des tâches : réalisation
+
+Comme prévu dans la planification, nous nous sommes répartis des fonctions à coder, ou des groupes de fonctions.
+
+Cependant, lorsque l’un d’entre nous rencontrait des difficultés sur la réalisation d’une fonction, nous essayions de plancher à plusieurs dessus pour résoudre le problème.
+
+Lucas a passé du temps sur file-list, message.C, utility.c. Emile sur file propertis et Malo sur sync.c et configuration.C.
+Cependant nous avons donc aussi parfois travaillé sur d’autres fichiers pour s’entraider ou simplement corriger des bugs fait par certains qui pouvaient entrainer des problèmes sur d’autres fonctions.
+
+Reprendre la section ci-dessus avec cette fois les données réelles : qui a fait quoi, en combien de temps.
+
+Difficultés rencontrées
+
+Compréhension des objectifs
+
+Le fait que le code soit pré-construit avec les fonctions est certes un avantages nous permettant de comprendre ce vers quoi nous devions aller.
+Cependant cela nous a aussi parfois bloqué, il fallait comprendre à quoi servait réellement chaque fonction pour faire fonctionner le programme.
+Nous avons remédier à ce problème en cherchant à décomposer chaque fonctions et de comprendre le but de chaque fonction.
+Ce problème est apparu car nous nous sommes lancés un peu trop vite dans le code avant de vraiment saisir toutes les fonctionnalités.
+
+Nous avons aussi eu du mal à comprendre au début toutes les librairies incluses dans le code. Ce n’est pas vraiment une difficulté liée à la compréhension cependant nous aurions bien aimé avoir une explication succincte sur les différentes librairies utilisées et pourquoi elles étaient nécessaires.
+
+Les fonctions lister_process_loop et analyzer_process_loop du module « processes » nous ont posé problème et sont surement incorrect. Nous aurions bien aimé une indication supplémentaire à leur sujet.
+
+
+Décrire pour chaque difficulté liée à la compréhension des instructions :
+Quelle instruction était incomplète pour vous
+Comment vous avez complété votre compréhension de l’instruction
+Si vous auriez pu remédier à ce problème plus tôt
+
+
+
+Réalisation des objectifs
+
+
+Nous avons rencontré beaucoup de problèmes au niveau de la compilation.
+En effet, nous avons notamment rencontré un problème : l’IDE ( CLion pour nous tous) comprenait ou est ce que nous allions chercher nos fonctions mais pas le compilateur.
+Nous avons partiellement résolu ce problème en supprimant les fonctions qui posaient soucis
+
+Nous avons aussi été confrontés à des problèmes de types avec le retour de certains fonctions.
+
+
+
+Décrire pour chaque difficulté rencontrée dans l’implémentation :
+Les « symptômes » de cette difficulté (par ex. : des résultats incohérents, des données perdues dans les communications, etc.)
+Comment le problème a été résolu (architecture du code dans la fonctionnalité concernée par exemple)
+Si le problème aurait pu être anticipé.
+Ce qui aurait pu faciliter la résolution/éviter le problème
+
+Proposition d’une amélioration
+
+Premièrement, le code que nous avons fait ne répond pas toujours exactement à ce que l’on pourrait vouloir en faire, notamment avec les options qui sont limitées. Nous aurions également pu bien mieux optimiser la communication entre les processus pour gagner du temps sur l'exécution du programme.	  
+
+
+
+Le modèle de code n’est pas optimal. Proposer une piste d’amélioration en décrivant dans les grandes lignes ce que ça changerait au code.
+
+Analyse des résultats
+
+Proposer votre analyse des résultats
+
+Retour d’expérience
+
+Le retour d’expérience (REX ou RETEX) d’un projet est un des enseignements majeurs de ce projet. Il consiste à reprendre le déroulement réel du projet, à le comparer au plan, puis à identifier les principaux points où les deux divergent afin d’en examiner les causes, les conséquences et les procédures à mettre en œuvre pour éviter que cela ne se reproduise. Il est fréquent que le RETEX soit pratiqué de manière informelle, ou par un manager n’ayant pas réellement contribué au projet. Certaines structures, en revanche, ont une approche bien plus formelle et enrichissante du RETEX, on pourra par exemple citer les forces armées et l’industrie électro-nucléaire. En effet, procéder à un RETEX complet, sans concession, dont les conclusions impliqueront des mises à jour des doctrines est un processus garant du maintien d’une structure en conditions opérationnelles. Il arrive parfois même de faire le RETEX d’un événement ou d’un projet d’une entité externe (EDF, l’IRSN et l’ASN ont fait un RETEX de l’accident de Fukushima, bien qu’il ait eu lieu sur des réacteurs de nature différente opérés par un autre fournisseur d’électricité, TEPCO).
+
+Ce projet contrairement à d’autres projets que nous avons réalisés ce semestre ou auparavant nous a paru vraiment long et surtout long à comprendre au début. Nous avons surtout bloqué au début pour comprendre tout ce qui était demandé et comment le faire. Le blocage aurait pu être évité ou du moins atténué si nous avions peut-être pris plus le temps de le déchiffrer en présentiel ensemble. En effet nous avons commencé le projet en distanciel sur discord, chacun lisant et essayant de comprendre ce qu’il fallait faire. Se voir en présentiel aurait peut-être permis de s’expliquer les choses comprises par certains et de se donner des idées plus claires sur ce que chacun aurait dû faire.
+
+Nous avons au cours du projet réalisé des réunions pour se partager les tâches que nous avons faites de nôtre côté, celles sur lesquelles nous bloquions. Cela a été plutôt une bonne chose cependant en faire plus souvent et surtout de manière plus répété (peut-être 2 fois par semaine) nous aurait peut-être permis d’être mieux organisé.
+
+Quant à la durée du projet, nous l’avons peut-être négligé au début en nous concentrant peut-être trop sur les projets d’autres UE. 
+
+
+Cette partie permet d’analyser avec un regard critique le déroulement du projet. Il s’agira notamment d’identifier les sources de blocage, et actions correctives qui permettront d’éviter ces blocages à l’avenir et l’enseignement que vous en tirez. Ces questions peuvent être répondues en se posant la question : « si je devais refaire le projet maintenant avec ma compétence acquise par le projet, que ferais-je différemment ? »
+
+Pour chaque blocage, identifier la tâche, l’impact sur le projet (délai, performance, complétion), la source profonde selon vous (incompréhension du sujet, mauvaise évaluation de la charge nécessaire, etc.), comment – avec le recul – il aurait été plus efficace de procéder et ce que cette prise de recul vous apporte pour votre futur.
+
+Dans cette partie, il est nécessaire de faire preuve de lucidité sur ses propres performances pour progresser vers votre futur métier d’ingénieur. Par exemple, avoir négligé la planification et sous-estimé le temps nécessaire au projet peut être une erreur fréquente et de laquelle tirer une leçon d’importance.
+
+Conclusion
+
+En conclusion, ce projet a été une expérience enrichissante. En effet, il nous a permis de réellement nous forcer à approfondir des notions pour trouver des solutions à des problèmes.
+Mener à bien ce projet en parallèle avec d’autres projets dans d’autres UV est aussi enrichissant puisque cela nous a obligé à nous organiser au sein du groupe pour travailler tous au même rythme. 
+Ce projet était sans doute le plus conséquent du semestre. Nous l’avons négligé au début et nous nous en sommes rendu compte plus tard, cela nous a donc appris qu’il faut s’investir de manière conséquente dès le début. Grâce à ce projet nous ne referons plus cette erreur dans le futur.
