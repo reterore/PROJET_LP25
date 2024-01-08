@@ -41,18 +41,6 @@ int get_file_stats(files_list_entry_t *entry) {
         entry->entry_type = DOSSIER;
     } else if (S_ISREG(sb.st_mode)) {
         entry->entry_type = FICHIER;
-
-        // Utilisation de concat_path pour ajouter "example.txt" au chemin
-        char result[PATH_SIZE];
-        if (concat_path(result, entry->path_and_name, "example.txt") != NULL) {
-            // Maintenant, 'result' contient le chemin complet avec le nouveau nom de fichier
-            // Utilisez 'result' comme nécessaire.
-            printf("Full path with new filename: %s\n", result);
-        } else {
-            // Gestion des erreurs lors de l'utilisation de concat_path
-            fprintf(stderr, "Error in concat_path\n");
-        }
-
         assert(compute_file_md5(entry) == 0 && "Error computing MD5");
     } else {
         return -1; // Type de fichier inconnu
